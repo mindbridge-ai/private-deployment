@@ -73,7 +73,8 @@ prep_logical_volume() {
     else
         prep_volume_group "$volume_group" $optional
 
-        if vgdisplay | grep -q "$volume_group"; then
+        if vgdisplay | grep -q "$volume_group"
+        then
             logSubstep "Creating logical volume ${logical_volume}"
             lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
                 --activate y

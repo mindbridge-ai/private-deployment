@@ -58,7 +58,17 @@ prep_filesystem() {
     else
         logStep "Preparing $mountpoint"
         prep_logical_volume "$volume_group" "$logical_volume" $optional
-        do_mount "$volume_group" "$logical_volume" "$mountpoint"
+        if lvdisplay "${volume_group}/${logical_volume}" &>/dev/null
+        then
+            do_mount "$volume_group" "$logical_volume" "$mountpoint"
+        else
+            if ! $optional
+            then
+                fatal "Could not find logical volume $logical_volume to create mountpoint $mountpoint"
+            else
+                logSuccess "Skipping creating mountpoint ${mountpoint}"
+            fi
+        fi
     fi
 }
 

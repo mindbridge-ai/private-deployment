@@ -87,6 +87,7 @@ prep_logical_volume() {
                 fatal "Could not find volume group listed $volume_group"
             else
                 logSuccess "Skipping creating logical volume for ${volume_group}."
+            fi
         fi
     fi
 }

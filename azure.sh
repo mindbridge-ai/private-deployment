@@ -50,13 +50,14 @@ prep_filesystem() {
     local volume_group=$1
     local logical_volume=$2
     local mountpoint=$3
+    local optional=$4
 
     if mountpoint -q "$mountpoint"
     then
         logSuccess "$mountpoint already mounted"
     else
         logStep "Preparing $mountpoint"
-        prep_logical_volume "$volume_group" "$logical_volume"
+        prep_logical_volume "$volume_group" "$logical_volume" $optional
         do_mount "$volume_group" "$logical_volume" "$mountpoint"
     fi
 }
@@ -64,12 +65,13 @@ prep_filesystem() {
 prep_logical_volume() {
     local volume_group=$1
     local logical_volume=$2
+    local optional=$3
 
     if lvdisplay "${volume_group}/${logical_volume}" &>/dev/null
     then
         logSuccess "Logical volume ${logical_volume} already exists"
     else
-        prep_volume_group "$volume_group"
+        prep_volume_group "$volume_group" $optional
 
         logSubstep "Creating logical volume ${logical_volume}"
         lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
@@ -117,6 +119,7 @@ prep_fstab() {
 
 prep_volume_group() {
     local volume_group=$1
+    local optional=$2
 
     if vgdisplay "$volume_group" &>/dev/null
     then
@@ -125,7 +128,12 @@ prep_volume_group() {
         local disk_dev
         if ! disk_dev=$(find_first_unused_data_disk)
         then
-            fatal "Could not find an unused Azure data disk for $volume_group"
+            if ! $optional
+            then
+                fatal "Could not find an unused Azure data disk for $volume_group"
+            else
+                logSuccess "Skipping creating volume group. ${volume_group} is optional and no disk available."
+            fi
         else
             logSubstep "Creating volume group $volume_group using $disk_dev"
             pvcreate "$disk_dev"
@@ -204,8 +212,8 @@ is_disk_available() {
 
 [ "$(id -u)" -eq 0 ] || fatal 'Use "sudo bash" to run this script as root'
 
-prep_filesystem vg_data lv_data /data
-prep_filesystem vg_backup lv_backup /backup
+prep_filesystem vg_data lv_data /data false
+prep_filesystem vg_backup lv_backup /backup true
 
 mkdir -p /backup/mongo /backup/postgres
 

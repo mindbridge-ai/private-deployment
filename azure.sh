@@ -85,7 +85,7 @@ prep_logical_volume() {
     then
         prep_volume_group "$volume_group" $optional
 
-        logSubstep "Creating logical volume ${logical_volume}"
+        logSubstep "here Creating logical volume ${logical_volume}"
         lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
             --activate y
 

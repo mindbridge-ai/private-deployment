@@ -81,24 +81,26 @@ prep_logical_volume() {
     then
         logSuccess "Logical volume ${logical_volume} already exists"
     fi
-    if [[ $(vgdisplay ${volume_group}) != *not found* ]]
+    if vgdisplay ${volume_group} | grep -q "not found"
     then
-        if ! $optional
-        then
-            fatal "Could not find $volume_group"
-        else
-            logSuccess "Skipping creating logical volume ${volume_group}"
-        fi
+        fatal "Could not find $volume_group"
+        # if ! $optional
+        # then
+        #     fatal "Could not find $volume_group"
+        # else
+        #     logSuccess "Skipping creating logical volume ${volume_group}"
+        # fi
     else
-        prep_volume_group "$volume_group" $optional
+        fatal "Found $volume_group"
+        # prep_volume_group "$volume_group" $optional
 
-        logSubstep "Creating logical volume ${logical_volume}"
-        lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
-            --activate y
+        # logSubstep "Creating logical volume ${logical_volume}"
+        # lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
+        #     --activate y
 
-        logSubstep "Creating XFS filesystem on ${logical_volume}"
-        mkfs.xfs "$(lv_device "$volume_group" "$logical_volume")"
-        logSuccess "Logical volume ${logical_volume} created"
+        # logSubstep "Creating XFS filesystem on ${logical_volume}"
+        # mkfs.xfs "$(lv_device "$volume_group" "$logical_volume")"
+        # logSuccess "Logical volume ${logical_volume} created"
     fi
 }
 

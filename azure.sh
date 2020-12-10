@@ -118,7 +118,7 @@ prep_fstab() {
 prep_volume_group() {
     local volume_group=$1
 
-    if vgdisplay "$volume_group" &>/dev/null
+    if vgdisplay | grep -q "$volume_group"
     then
         logSuccess "Volume group ${volume_group} already exists."
     else

@@ -140,7 +140,6 @@ prep_volume_group() {
     local volume_group=$1
     local optional=$2
     local disk_dev
-    logSubstep "Creating volume group $volume_group"
     if ! disk_dev=$(find_first_unused_data_disk)
     then
         if ! $optional
@@ -150,6 +149,7 @@ prep_volume_group() {
             logSuccess "Skipping creating volume group. ${volume_group} is optional and no disk available."
         fi
     else
+        logSubstep "Creating volume group $volume_group using $disk_dev"
         pvcreate "$disk_dev"
         vgcreate "$volume_group" "$disk_dev"
     fi

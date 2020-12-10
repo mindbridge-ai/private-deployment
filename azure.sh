@@ -139,25 +139,20 @@ prep_fstab() {
 prep_volume_group() {
     local volume_group=$1
     local optional=$2
-
-    if ! vgdisplay ${volume_group} | grep -q "not found"
+    local disk_dev
+    
+    if ! disk_dev=$(find_first_unused_data_disk)
     then
-        logSuccess "Volume group ${volume_group} already exists."
-    else
-        local disk_dev
-        if ! disk_dev=$(find_first_unused_data_disk)
+        if ! $optional
         then
-            if ! $optional
-            then
-                fatal "Could not find an unused Azure data disk for $volume_group"
-            else
-                logSuccess "Skipping creating volume group. ${volume_group} is optional and no disk available."
-            fi
+            fatal "Could not find an unused Azure data disk for $volume_group"
         else
-            logSubstep "Creating volume group $volume_group using $disk_dev"
-            pvcreate "$disk_dev"
-            vgcreate "$volume_group" "$disk_dev"
+            logSuccess "Skipping creating volume group. ${volume_group} is optional and no disk available."
         fi
+    else
+        logSubstep "Creating volume group $volume_group using $disk_dev"
+        pvcreate "$disk_dev"
+        vgcreate "$volume_group" "$disk_dev"
     fi
 }
 

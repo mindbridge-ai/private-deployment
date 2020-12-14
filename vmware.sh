@@ -160,31 +160,33 @@ find_first_unused_data_disk() {
     # Data disks will appear in /dev/disk/azure/scsi[0-3]/lun[0-9][0-9] (0-63)
     # We don't want anything with partitions ("-part*")
     # Note that lun10 will sort before lun2.
-    local disk
-    for disk in /dev/disk/azure/scsi*/lun[0-9] /dev/disk/azure/scsi*/lun[1-9][0-9]
-    do
-        # No wildcard match
-        if [ ! -e "$disk" ]
-        then
-            continue
-        fi
+    # local disk
+    # for disk in /dev/disk/azure/scsi*/lun[0-9] /dev/disk/azure/scsi*/lun[1-9][0-9]
+    # do
+    #     # No wildcard match
+    #     if [ ! -e "$disk" ]
+    #     then
+    #         continue
+    #     fi
 
-        # if ls "${disk}-part"* &>/dev/null
-        # then
-        #     # Disk has a partition table, so the system owner probably has
-        #     # plans for it
-        #     continue
-        # fi
+    #     # if ls "${disk}-part"* &>/dev/null
+    #     # then
+    #     #     # Disk has a partition table, so the system owner probably has
+    #     #     # plans for it
+    #     #     continue
+    #     # fi
 
-        # if ! is_disk_available "$disk"
-        # then
-        #     continue
-        # fi
+    #     # if ! is_disk_available "$disk"
+    #     # then
+    #     #     continue
+    #     # fi
 
-        echo "$disk"
-        return 0
-    done
-    return 1
+    #     echo "$disk"
+    #     return 0
+    # done
+    # return 1
+     echo "/dev/sdb"
+     return 0
 }
 
 is_disk_available() {

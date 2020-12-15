@@ -81,7 +81,7 @@ prep_logical_volume() {
     then
         logSuccess "Logical volume ${logical_volume} already exists"
     fi
-    if vgdisplay ${volume_group} | grep -q "not found"
+    if ! vgdisplay ${volume_group} | grep -q "not found"
     then
         if ! $optional
         then

@@ -224,8 +224,8 @@ is_disk_available() {
 
 [ "$(id -u)" -eq 0 ] || fatal 'Use "sudo bash" to run this script as root'
 
-prep_filesystem vg_data lv_data /data false
-prep_filesystem vg_backup lv_backup /backup true
+prep_filesystem vg_data_v2 lv_data_v2 /data false
+prep_filesystem vg_backup_v2 lv_backup_v2 /backup true
 
 mkdir -p /backup/mongo /backup/postgres
 

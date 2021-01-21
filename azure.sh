@@ -62,8 +62,7 @@ prep_filesystem() {
         then
             do_mount "$volume_group" "$logical_volume" "$mountpoint"
         else
-            if ! $optional
-            then
+            if [ "$optional" != true]; then
                 fatal "Could not find logical volume $logical_volume to create mountpoint $mountpoint"
             else
                 logSuccess "Skipping creating mountpoint ${mountpoint}"
@@ -83,8 +82,7 @@ prep_logical_volume() {
     fi
     if ! vgdisplay ${volume_group} | grep -q "not found"
     then
-        if ! $optional
-        then
+        if [ "$optional" != true]; then
             fatal "Could not find $volume_group"
         else
             logSuccess "Skipping creating logical volume ${volume_group}"
@@ -142,8 +140,7 @@ prep_volume_group() {
     local disk_dev
     if ! disk_dev=$(find_first_unused_data_disk)
     then
-        if ! $optional
-        then
+        if [ "$optional" != true]; then
             fatal "Could not find an unused Azure data disk for $volume_group"
         else
             logSuccess "Skipping creating volume group. ${volume_group} is optional and no disk available."

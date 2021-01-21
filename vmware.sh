@@ -62,7 +62,7 @@ prep_filesystem() {
         then
             do_mount "$volume_group" "$logical_volume" "$mountpoint"
         else
-            if [ "$optional" != true]; then
+            if [ "$optional" != true ]; then
                 fatal "Could not find logical volume $logical_volume to create mountpoint $mountpoint"
             else
                 logSuccess "Skipping creating mountpoint ${mountpoint}"
@@ -82,21 +82,19 @@ prep_logical_volume() {
     fi
     if vgdisplay ${volume_group} | grep -q "not found"
     then
-        if [ "$optional" != true]; then
-            fatal "Could not find $volume_group"
+        if [ "$optional" != true ]; then
+            prep_volume_group "$volume_group" $optional
+
+            logSubstep "Creating logical volume ${logical_volume}"
+            lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
+                --activate y
+
+            logSubstep "Creating XFS filesystem on ${logical_volume}"
+            mkfs.xfs "$(lv_device "$volume_group" "$logical_volume")"
+            logSuccess "Logical volume ${logical_volume} created"
         else
             logSuccess "Skipping creating logical volume ${volume_group}"
         fi
-    else
-        prep_volume_group "$volume_group" $optional
-
-        logSubstep "Creating logical volume ${logical_volume}"
-        lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
-            --activate y
-
-        logSubstep "Creating XFS filesystem on ${logical_volume}"
-        mkfs.xfs "$(lv_device "$volume_group" "$logical_volume")"
-        logSuccess "Logical volume ${logical_volume} created"
     fi
 }
 
@@ -140,7 +138,7 @@ prep_volume_group() {
     local disk_dev
     if ! disk_dev=$(find_first_unused_data_disk)
     then
-        if [ "$optional" != true]; then
+        if [ "$optional" != true ]; then
             fatal "Could not find an unused Azure data disk for $volume_group"
         else
             logSuccess "Skipping creating volume group. ${volume_group} is optional and no disk available."

@@ -273,6 +273,10 @@ else
     logSuccess "Linked /var/lib/docker to data volume"
 fi
 
+# For local blob storage
+mkdir -p /var/lib/docker/blob-driver
+chown -R 9999:9999 /var/lib/docker/blob-driver
+
 echo
 read -p "Proceed with Kubernetes installation? [y/N] " PROCEED < /dev/tty
 case "$PROCEED" in

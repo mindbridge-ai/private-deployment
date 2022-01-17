@@ -223,7 +223,9 @@ is_disk_available() {
 prep_filesystem vg_data lv_data /data false
 prep_filesystem vg_backup lv_backup /backup true
 
+# Create backup directories with correct permissions for the mongo/postgres user
 mkdir -p /backup/mongo /backup/postgres
+chown -R 999:999 /backup/*
 
 # Create /opt/replicated/rook as a symlink to /data/rook to keep Replicated's
 # internal volumes on the larger data filesystem.

@@ -56,11 +56,12 @@ prep_filesystem() {
     then
         logSuccess "$mountpoint already mounted"
     else
-        logStep "Preparing $mountpoint"
+        logStep "Preparing logical volume $logical_volume"
         prep_logical_volume "$volume_group" "$logical_volume" $optional
-        if lvdisplay "${volume_group}/${logical_volume}" &>/dev/null
+	if [ -e "/dev/$volume_group/$logical_volume" ]
         then
-            do_mount "$volume_group" "$logical_volume" "$mountpoint"
+            logStep "Attempting to mount $mountpoint"
+	    do_mount "$volume_group" "$logical_volume" "$mountpoint"
         else
             if [ "$optional" != true ]; then
                 fatal "Could not find logical volume $logical_volume to create mountpoint $mountpoint"
@@ -75,19 +76,19 @@ prep_logical_volume() {
     local volume_group=$1
     local logical_volume=$2
     local optional=$3
+    local volume_group_exists=false
 
-    if lvdisplay "${volume_group}/${logical_volume}" &>/dev/null
-    then
-        logSuccess "Logical volume ${logical_volume} already exists"
+    if vgs | grep -q ${volume_group}; then
+        volume_group_exists=true
     fi
-    if vgdisplay ${volume_group} | grep -q "not found"
+    if [ "$volume_group_exists" = false ]
     then
         if [ "$optional" != true ]; then
-            prep_volume_group "$volume_group" $optional
+            logStep "Creating volume group $volume_group"
+	    prep_volume_group "$volume_group" $optional
 
             logSubstep "Creating logical volume ${logical_volume}"
-            lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" \
-                --activate y
+            lvcreate --extents +100%FREE "$volume_group" --name "$logical_volume" --activate y
 
             logSubstep "Creating XFS filesystem on ${logical_volume}"
             mkfs.xfs "$(lv_device "$volume_group" "$logical_volume")"
@@ -95,6 +96,8 @@ prep_logical_volume() {
         else
             logSuccess "Skipping creating logical volume ${volume_group}"
         fi
+    else
+        logSuccess "Volume group ${volume_group} already exists"
     fi
 }
 
@@ -161,18 +164,21 @@ find_first_unused_data_disk() {
         # No wildcard match
         if [ ! -e "$disk" ]
         then
-            continue
+            logSubstep "No wildcard match for $disk"
+	    continue
         fi
 
         if ls "${disk}-part"* &>/dev/null
         then
             # Disk has a partition table, so the system owner probably has
             # plans for it
+	    logSubstep "Disk $disk has a partition table"
             continue
         fi
 
         if ! is_disk_available "$disk"
         then
+	    logSubstep "Disk $disk is not available"
             continue
         fi
 
@@ -191,24 +197,28 @@ is_disk_available() {
     # Already used by LVM
     if pvdisplay "$disk" &>/dev/null
     then
+	logSubstep "Disk $disk already used by lvm"
         return 1
     fi
 
     # Directly mounted
     if grep -q "$disk" /proc/mounts
     then
+	logSubstep "Disk $disk already directly mounted"
         return 1
     fi
 
     # Used as swap
     if grep -q "$disk" /proc/swaps
     then
+	logSubstep "Disk $disk already used as a swap"
         return 1
     fi
 
     # Used as part of a dm-mapper RAID group
     if grep -q "$disk" /proc/mdstat
     then
+        logSubstep "Disk $disk already used in RAID group"
         return 1
     fi
 
@@ -223,8 +233,11 @@ is_disk_available() {
 prep_filesystem vg_data lv_data /data false
 prep_filesystem vg_backup lv_backup /backup true
 
+# Create backup directories with correct permissions for the mongo/postgres user
 mkdir -p /backup/mongo /backup/postgres
+chown -R 999:999 /backup/*
 
+# We don't use openebs yet, but may in the future
 if [ -e /var/openebs/local ]
 then
     if [ -L /var/openebs/local ]
@@ -255,6 +268,26 @@ else
     chmod 711 /data/docker
     logSuccess "Linked /var/lib/docker to data volume"
 fi
+
+if [ -e /var/lib/kubelet ]
+then
+    if [ -L /var/lib/kubelet ]
+    then
+        logSuccess "/var/lib/kubelet is already a symlink"
+    else
+        logWarn "/var/lib/kubelet already exists - cannot link to data volume"
+    fi
+else
+    mkdir -p /data/kubelet
+    ln -s /data/docker /var/lib/kubelet
+    # Match /var/lib/docker perms
+    chmod 711 /data/kubelet
+    logSuccess "Linked /var/lib/kubelet to data volume"
+fi
+
+# For local blob storage
+mkdir -p /var/lib/docker/blob-driver
+chown -R 9999:9999 /var/lib/docker/blob-driver
 
 echo
 read -p "Proceed with Kubernetes installation? [y/N] " PROCEED < /dev/tty

@@ -241,6 +241,11 @@ chown -R 999:999 /data/postgres/*
 mkdir -p /backup/mongo /backup/postgres
 chown -R 999:999 /backup/*
 
+
+# Create backup directories with correct permissions for the mongo/postgres user
+mkdir -p /backup/mongo /backup/postgres
+chown -R 999:999 /backup/*
+
 # We don't use openebs yet, but may in the future
 if [ -e /var/openebs/local ]
 then
@@ -273,6 +278,7 @@ else
     logSuccess "Linked /var/lib/docker to data volume"
 fi
 
+
 if [ -e /var/lib/kubelet ]
 then
     if [ -L /var/lib/kubelet ]
@@ -288,6 +294,7 @@ else
     chmod 711 /data/kubelet
     logSuccess "Linked /var/lib/kubelet to data volume"
 fi
+
 
 # For local blob storage
 mkdir -p /var/lib/docker/blob-driver

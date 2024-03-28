@@ -225,24 +225,6 @@ prep_filesystem vg_backup lv_backup /backup true
 
 mkdir -p /backup/mongo /backup/postgres
 
-# Create /opt/replicated/rook as a symlink to /data/rook to keep Replicated's
-# internal volumes on the larger data filesystem.
-if [ -e /opt/replicated/rook ]
-then
-    if [ -L /opt/replicated/rook ]
-    then
-        logSuccess "/opt/replicated/rook is already a symlink"
-    else
-        logWarn "/opt/replicated/rook already exists - cannot link to data volume"
-    fi
-else
-    mkdir -p /data/rook
-    mkdir -p /opt/replicated
-    ln -s /data/rook /opt/replicated/rook
-    logSuccess "Linked /opt/replicated/rook to data volume"
-fi
-
-# We don't use openebs yet, but may in the future
 if [ -e /var/openebs/local ]
 then
     if [ -L /var/openebs/local ]

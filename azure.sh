@@ -234,7 +234,7 @@ prep_filesystem vg_data lv_data /data false
 prep_filesystem vg_backup lv_backup /backup true
 
 # Assign the correct permissions for postgres on the data volume
-mkdir -p /data/postgres
+mkdir -p /data/postgres/db
 chown -R 999:999 /data/postgres/*
 
 # Create backup directories with correct permissions for the mongo/postgres user

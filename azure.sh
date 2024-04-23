@@ -233,10 +233,6 @@ is_disk_available() {
 prep_filesystem vg_data lv_data /data false
 prep_filesystem vg_backup lv_backup /backup true
 
-# Assign the correct permissions for postgres on the data volume
-mkdir -p /data/postgres/db
-chown -R 999:999 /data/postgres/*
-
 # Create backup directories with correct permissions for the mongo/postgres user
 mkdir -p /backup/mongo /backup/postgres
 chown -R 999:999 /backup/*
@@ -287,6 +283,22 @@ else
     # Match /var/lib/docker perms
     chmod 711 /data/kubelet
     logSuccess "Linked /var/lib/kubelet to data volume"
+fi
+
+if [ -e /var/lib/containerd ]
+then
+    if [ -L /var/lib/containerd ]
+    then
+        logSuccess "/var/lib/containerd is already a symlink"
+    else
+        logWarn "/var/lib/containerd already exists - cannot link to data volume"
+    fi
+else
+    mkdir -p /data/containerd
+    ln -s /data/containerd /var/lib/containerd
+    # Match /var/lib/docker perms
+    chmod 711 /data/containerd
+    logSuccess "Linked /var/lib/containerd to data volume"
 fi
 
 # For local blob storage

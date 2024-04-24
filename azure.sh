@@ -237,6 +237,11 @@ prep_filesystem vg_backup lv_backup /backup true
 mkdir -p /backup/mongo /backup/postgres
 chown -R 999:999 /backup/*
 
+
+# Create backup directories with correct permissions for the mongo/postgres user
+mkdir -p /backup/mongo /backup/postgres
+chown -R 999:999 /backup/*
+
 # We don't use openebs yet, but may in the future
 if [ -e /var/openebs/local ]
 then
@@ -268,6 +273,7 @@ else
     chmod 711 /data/docker
     logSuccess "Linked /var/lib/docker to data volume"
 fi
+
 
 if [ -e /var/lib/kubelet ]
 then
